@@ -1,7 +1,7 @@
 # Wednesday Week47
 
 ## Work plan
-For this week's exercise, we will recreate the PCA results of the paper we discussed on Wednesday, and start working on a new dataset. The questions at the end of the document are your 3rd hand-in exercise to be hand in in brightspace by Sunday, 24:00(night) - Dec. 4th.
+For this week's exercise, we will recreate the PCA results of the [Genome-wide patterns of selection in 230 ancient Eurasians](https://doi.org/10.1038/nature16152) paper (Mathieson et al, 2015) and start working on a new dataset. The questions at the end of the document are your 3rd hand-in exercise to be submitted on Brightspace by 23:59 on Sunday the 3rd December.
 
 ## Background (adapted from [link](https://github.com/stschiff/compvar-workshop-docs/tree/master/contents/02_pca))
 
