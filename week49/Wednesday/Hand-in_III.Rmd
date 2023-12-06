@@ -1,0 +1,199 @@
+---
+title: "Hand-in III"
+author: "cpantea"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+------------------------------------------------------------------------
+
+## We start by loading the packages we'll need:
+
+```{r}
+library(ggplot2)
+```
+
+## And the data:
+
+```{r}
+dataWE <- read.table("dataWE.txt", sep="\t", header = TRUE)
+dataEE <- read.table("dataEE.txt", sep="\t", header = TRUE)
+```
+
+## Then we start answering the questions
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## Part I - Q1:
+
+```{r}
+weur_pc12 <- ggplot(dataWE, aes(x = PC1, y = PC2, color = ModAnc)) + geom_point()
+weur_pc12
+```
+
+------------------------------------------------------------------------
+
+## Q2:
+
+```{r}
+pops <- c("English", "Norwegian", "Finnish", "Icelandic")
+
+dataWEsub <- subset(dataWE, POP %in% pops)
+
+weur_sub1 <- ggplot(dataWEsub, aes(x = PC1, y = PC2, color = POP)) + geom_point()
+weur_sub1
+```
+
+Icelandic and Norwegian are virtually indistinguishable; close clustering with English, as expected. Finns are more distant - and this is basically what we would expect from the historical dispersal of these populations as well as linguistic relationships (Iceland was colonised by Norwegians; English split from Norse earlier; Finns are much more different)
+
+------------------------------------------------------------------------
+
+## Q3:
+
+```{r}
+pops_freeChoice <- c("Georgian", "Armenian", "Cypriot", "Turkish", "Greek")
+
+dataWEsub2 <- subset(dataWE, POP %in% pops_freeChoice)
+
+weur_sub2 <- ggplot(dataWEsub2, aes(x = PC1, y = PC2, color = POP)) + geom_point()
+weur_sub2
+```
+
+Choosing these four, we can observe that Turks tend to be quite diverse, with the other three populations clustering much more tightly due to their developing in well-defined areas, in relative isolation. Armenians, however, cluster within a subset of Turks, hinting at potential long-standing inbreeding of Turks into Armenians. Perhaps surprisingly, Turks and Cypriots do not show any tight clustering, so we would expect Cypriots to lie closer to Greeks. However, subsequent plotting of Greeks along with these pops shows that Cypriots differ substantially from them too.
+
+------------------------------------------------------------------------
+
+## Q4:
+
+```{r}
+weur_sub3 <- ggplot(dataWEsub2, aes(x = PC3, y = PC4, color = POP)) + geom_point()
+weur_sub3
+```
+
+The third and fourth principal components still recover intra-population structure (individuals from each population cluster together relatively tightly except for the more diverse Turks, as before). However, inter-population relationships are resolved to a far lessened extent. We can thus confirm that less population relatedness is being captured by these principal components.
+
+------------------------------------------------------------------------
+
+## Q5:
+
+```{r}
+weur_sub4 <- ggplot(dataWEsub2, aes(x = PC3, y = PC7, color = POP)) + geom_point()
+weur_sub4
+
+weur_sub5 <- ggplot(dataWEsub2, aes(x = PC5, y = PC6, color = POP)) + geom_point()
+weur_sub5
+
+weur_sub6 <- ggplot(dataWEsub2, aes(x = PC8, y = PC9, color = POP)) + geom_point()
+weur_sub6
+```
+
+The farther away from the first PCs, the less structure captured. This is the very essence of PCA - the PCs are ordered in terms of the effect they capture. PCs farther away will show less structure.
+
+------------------------------------------------------------------------
+
+## Q6:
+
+```{r}
+latlongWE <- read.table("dataWE_LatLong.txt", sep="\t", header = TRUE)
+
+corrWE <- merge(dataWE, latlongWE, by = "IND")
+
+corr_variables <- corrWE[, c("PC1", "PC2", "Latitude", "Longitude"), drop = FALSE]
+
+cor_matrix <- cor(corr_variables)
+
+library(corrplot)
+library(RColorBrewer)
+
+corrplot(cor_matrix, type = "upper", order = "hclust", col = brewer.pal(n = 8, name = "RdYlBu"))
+```
+
+Without displaying the precise correlation coefficients or their significance values, we can already notice some trends: latitude and longitude show very weak negative correlation, PC1 appears to be negatively correlated with both latitude and PC2, and the latter shows a relatively strong positive correlation with longitude. This might suggest that PC2 mostly captures the effect of longitude (East-West position), with latitude (North-South position) also seemingly contributing to PC2.
+
+```{r}
+cor_coefficients <- matrix(NA, nrow = ncol(cor_matrix), ncol = ncol(cor_matrix))
+
+p_values <- matrix(NA, nrow = ncol(cor_matrix), ncol = ncol(cor_matrix))
+
+# for-loop to compute correlation coefficients and p-values:
+for (i in 1:ncol(cor_matrix)) {
+  for (j in 1:ncol(cor_matrix)) {
+    if (i != j) {
+      result <- cor.test(corr_variables[, i], corr_variables[, j])
+      cor_coefficients[i, j] <- result$estimate
+      p_values[i, j] <- result$p.value
+    }
+  }
+}
+
+print("Correlation Coefficients:")
+print(cor_coefficients)
+
+cat("
+")
+
+print("P-Values:")
+print(p_values)
+```
+
+The correlation coefficients and p-values naturally support this, with the strongest effects seen between PC2 and the two geographical coordinates, as well as between PC1-latitude and PC1-PC2.
+
+## ------------------------------------------------------------------------
+
+## Part II - Q7:
+
+```{r}
+eeur_pc12 <- ggplot(dataEE, aes(x = PC1, y = PC2, color = POP)) + geom_point()
+eeur_pc12
+```
+
+Siberians cluster together with the respectively tightly-clustered Baikal and Beringian/Aleutian/Alaskan subpopulations, while European Russians lie far away from this group. The differences between these subpopulations are mainly captured by the second PC, with the first mainly separating European Russians from all other populations. The three pan-Beringian subpopulations also seemingly cluster together, with Baikal lying slightly outside of this potential cluster, reflecting the geographical distribution of these subpops.
+
+------------------------------------------------------------------------
+
+## Q8:
+
+```{r}
+eeur_pc34 <- ggplot(dataEE, aes(x = PC3, y = PC4, color = POP)) + geom_point()
+eeur_pc34
+```
+
+The third and fourth PCs better reflect the geographical dispersal of these populations (to some extent), with Siberians, Baikal, and European Russians clustering together, as do the populations around the Bering strait, mainly through PC3. It would seem that PC4 mostly captures differences within Siberians, with Baikal Russians also showing some amount. Here, PC4 might actually capture mostly geographical distribution (latitude for all except Siberians, maybe both latitude and longitude for Siberians).
+
+## ------------------------------------------------------------------------
+
+## Part III - Q9:
+
+Ancient DNA sequencing is prone to producing artifacts of various kinds; for PCA in particular, any contamination could have potentially large effects, as would any enrichment of ancient sequences that were also introgressed into modern humans, or sequences ancestral to both groups. PCR-specific artefacts might also affect PCA, particularly some well-known prevalent substitutions due to use of error-prone polymerases. This review of PCA use for population structure inference might also be worth reading: (<https://www.nature.com/articles/s41598-022-14395-4>)
+
+------------------------------------------------------------------------
+
+## Q10:
+
+Pretty much anything that would show a specific structure when grouping individuals, particularly for large datasets with many variables influencing the observed effect. Some nice examples would be gene expression, imaging, and clinical study datasets.
